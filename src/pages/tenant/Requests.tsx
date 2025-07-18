@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import { Plus, Wrench, Sparkles, MessageSquare, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+
 
 const mockRequests = [
   {
@@ -49,33 +51,38 @@ export default function Requests() {
     title: '',
     description: ''
   });
-  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitRequest = () => {
+  const handleSubmitRequest = async () => {
     if (!newRequest.type || !newRequest.title || !newRequest.description) {
-      toast({
-        title: "Please fill all fields",
-        variant: "destructive"
-      });
+      toast.error("Please fill all fields");
       return;
     }
 
-    const request = {
-      id: requests.length + 1,
-      ...newRequest,
-      status: 'pending',
-      createdAt: new Date().toISOString().split('T')[0],
-      resolvedAt: null
-    };
-
-    setRequests([request, ...requests]);
-    setNewRequest({ type: '', title: '', description: '' });
-    setIsDialogOpen(false);
+    setIsSubmitting(true);
     
-    toast({
-      title: "Request submitted successfully!",
-      description: "We'll get back to you soon."
-    });
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const request = {
+        id: requests.length + 1,
+        ...newRequest,
+        status: 'pending',
+        createdAt: new Date().toISOString().split('T')[0],
+        resolvedAt: null
+      };
+
+      setRequests([request, ...requests]);
+      setNewRequest({ type: '', title: '', description: '' });
+      setIsDialogOpen(false);
+      
+      toast.success("Request submitted successfully! We'll get back to you soon.");
+    } catch (error) {
+      toast.error("Failed to submit request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -153,8 +160,19 @@ export default function Requests() {
                   />
                 </div>
                 
-                <Button onClick={handleSubmitRequest} className="w-full">
-                  Submit Request
+                <Button 
+                  onClick={handleSubmitRequest} 
+                  className="w-full" 
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Submitting...
+                    </>
+                  ) : (
+                    'Submit Request'
+                  )}
                 </Button>
               </div>
             </DialogContent>

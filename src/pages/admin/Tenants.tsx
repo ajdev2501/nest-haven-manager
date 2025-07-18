@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import PageSkeleton from '../../components/PageSkeleton';
 import { Users, Search, Edit, Trash2, Phone, Mail, Home, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
+
 
 const mockTenants = [
   {
@@ -60,7 +62,16 @@ export default function Tenants() {
   const [tenants, setTenants] = useState(mockTenants);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate API call
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const filteredTenants = tenants.filter(tenant => {
     const matchesSearch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,12 +83,16 @@ export default function Tenants() {
 
   const handleDeleteTenant = (id: number) => {
     setTenants(tenants.filter(tenant => tenant.id !== id));
-    toast({ title: "Tenant removed successfully!" });
+    toast.success("Tenant removed successfully!");
   };
 
   const activeTenants = tenants.filter(t => t.status === 'active').length;
   const pendingTenants = tenants.filter(t => t.status === 'pending').length;
   const totalRevenue = tenants.filter(t => t.status === 'active').reduce((sum, t) => sum + t.rent, 0);
+
+  if (isLoading) {
+    return <PageSkeleton stats cards={6} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background p-6">
